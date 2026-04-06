@@ -44,9 +44,11 @@ local CONFIG_YELL_NO_EMOTE = "chat_yell_no_emote";
 local CONFIG_INSERT_FULL_RP_NAME = "chat_insert_full_rp_name";
 local CONFIG_SHOW_ICON = "chat_show_icon";
 local CONFIG_SHOW_OOC = "chat_show_ooc";
+local CONFIG_OOC_INDICATOR_STYLE = "chat_ooc_indicator_style";
 local CONFIG_NPCSPEECH_REPLACEMENT = "chat_npcspeech_replacement";
 
 local OOC_INDICATOR_TEXT = TRP3_API.Colors.Red("<" .. loc.CM_OOC .. "> ");
+local OOC_INDICATOR_ICON = "|TInterface\\COMMON\\Indicator-Red:16|t ";
 
 local function configNoYelledEmote()
 	return getConfigValue(CONFIG_YELL_NO_EMOTE);
@@ -127,6 +129,7 @@ local function createConfigPage()
 	registerConfigKey(CONFIG_INSERT_FULL_RP_NAME, true);
 	registerConfigKey(CONFIG_SHOW_ICON, false);
 	registerConfigKey(CONFIG_SHOW_OOC, false);
+	registerConfigKey(CONFIG_OOC_INDICATOR_STYLE, TRP3_OOCIndicatorStyle.Text);
 	registerConfigKey(CONFIG_NPCSPEECH_REPLACEMENT, true);
 
 	local NAMING_METHOD_TAB = {
@@ -148,6 +151,11 @@ local function createConfigPage()
 		{ "(( OOC ))", "(%(%(.-%)%))" },
 		{ "(OOC) + (( OOC )) ", "(%(+[^%)]+%)+)" },
 	}
+
+	local OOC_INDICATOR_TYPES = {
+		{ loc.CO_TOOLTIP_PREFERRED_OOC_INDICATOR_TEXT .. TRP3_API.Colors.Red("<" .. loc.CM_OOC .. ">"), TRP3_OOCIndicatorStyle.Text },
+		{ loc.CO_TOOLTIP_PREFERRED_OOC_INDICATOR_ICON .. OOC_INDICATOR_ICON, TRP3_OOCIndicatorStyle.Icon },
+	};
 
 	-- Build configuration page
 	local CONFIG_STRUCTURE = {
@@ -198,6 +206,16 @@ local function createConfigPage()
 				inherit = "TRP3_ConfigCheck",
 				title = loc.CO_CHAT_SHOW_OOC,
 				configKey = CONFIG_SHOW_OOC,
+			},
+			{
+				inherit = "TRP3_ConfigDropDown",
+				widgetName = "TRP3_ConfigurationTooltip_Chat_OOC_Indicator",
+				title = loc.CO_TOOLTIP_PREFERRED_OOC_INDICATOR,
+				listContent = OOC_INDICATOR_TYPES,
+				configKey = CONFIG_OOC_INDICATOR_STYLE,
+				listWidth = nil,
+				listCancel = true,
+				dependentOnOptions = { CONFIG_SHOW_OOC },
 			},
 			{
 				inherit = "TRP3_ConfigCheck",
@@ -707,7 +725,11 @@ function Utils.customGetColoredName(event, _, _, unitID, _, _, _, _, _, _, _, _,
 
 	if getConfigValue(CONFIG_SHOW_OOC) and not player:IsInCharacter() then
 		-- Prefix name with OOC indicator.
-		characterName = OOC_INDICATOR_TEXT .. characterName;
+		if getConfigValue(CONFIG_OOC_INDICATOR_STYLE) == TRP3_OOCIndicatorStyle.Icon then
+			characterName = OOC_INDICATOR_ICON .. characterName;
+		else
+			characterName = OOC_INDICATOR_TEXT .. characterName;
+		end
 	end
 
 	if hasNonDefaultProfile and getConfigValue(CONFIG_SHOW_ICON) then
